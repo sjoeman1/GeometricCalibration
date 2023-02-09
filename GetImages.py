@@ -3,13 +3,20 @@ import cv2 as cv
 import glob
 
 vid = cv.VideoCapture(0)
+columns = 6
+rows = 7
+board_shape = (columns, rows)
 
 def main():
     i = 0
+    print("get 25 images, 5 which do not automatically detect corners.")
+    print("Take a final test image that has the chessboard tilted significantly close to the image border. Corners have to be found automatically")
+    print("press space to take picture, esc to exit")
     while True :
         ret, frame = vid.read()
         if not ret:
-            continue
+            print("could not find video input, exiting...")
+            break
         cv.imshow('img', frame)
         key = cv.waitKey(1)
         if key%256 == 27:
@@ -17,7 +24,10 @@ def main():
             break
         elif key%256 == 32:
             print(f"writing image {i}")
-            cv.imwrite(f"images\\chessImage{i}.jpg", frame)
+            gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+            ret, corners = cv.findChessboardCorners(gray, board_shape, None)
+            print(f"Able to find corners: {ret}")
+            cv.imwrite(f"images\\chessImage{i}{ret}.jpg", frame)
             i += 1
 
     vid.release()
