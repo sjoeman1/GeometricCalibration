@@ -24,7 +24,7 @@ def click_event(event, x, y, flags, params):
     if event == cv.EVENT_LBUTTONDOWN:
         print(x, ' ', y)
         params.append([x, y])
-        if len(params) == (columns+1) * (rows+1):
+        if len(params) == 4:
             cv.destroyWindow('img')
 
 
