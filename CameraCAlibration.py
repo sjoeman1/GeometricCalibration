@@ -6,8 +6,8 @@ import glob
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
-columns = 7
-rows = 10
+columns = 6
+rows = 7
 board_shape = (columns, rows)
 
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
