@@ -49,6 +49,7 @@ def main():
         automatic = ret
         if not ret:
             ret, corners = getChessboardCorners(gray)
+            #TODO: linear interpolation of 4 corner points
             automatic = False
         # If found, add object points, image points (after refining them)
         objpoints.append(objp)
