@@ -5,11 +5,14 @@ import glob
 # termination criteria
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-board_shape = (7, 10)
+
+columns = 7
+rows = 10
+board_shape = (columns, rows)
 
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-objp = np.zeros((6*7,3), np.float32)
-objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+objp = np.zeros((columns*rows,3), np.float32)
+objp[:,:2] = np.mgrid[0:columns,0:rows].T.reshape(-1,2)
 
 # Arrays to store object points and image points from all the images.
 objpoints = [] # 3d point in real world space
@@ -21,8 +24,7 @@ def click_event(event, x, y, flags, params):
     if event == cv.EVENT_LBUTTONDOWN:
         print(x, ' ', y)
         params.append([x, y])
-        (c, r) = board_shape
-        if len(params) == (c+1) * (r+1):
+        if len(params) == (columns+1) * (rows+1):
             cv.destroyWindow('img')
 
 
@@ -37,22 +39,27 @@ def getChessboardCorners(img):
 
 
 def main():
+    i = 0
     for fname in images:
         print(fname)
         img = cv.imread(fname)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # Find the chess board corners
-        ret, corners = cv.findChessboardCorners(gray, (7,6), None)
+        ret, corners = cv.findChessboardCorners(gray, board_shape, None)
+        automatic = ret
         if not ret:
             ret, corners = getChessboardCorners(gray)
+            automatic = False
         # If found, add object points, image points (after refining them)
         objpoints.append(objp)
         corners2 = cv.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
         imgpoints.append(corners2)
         # Draw and display the corners
-        cv.drawChessboardCorners(img, (7,6), corners2, ret)
+        cv.drawChessboardCorners(img, board_shape, corners2, ret)
         cv.imshow('img', img)
+        cv.imwrite(f"cornerImages\\{automatic}chessImage{i}.jpg", img)
         cv.waitKey(500)
+        i += 1
     cv.destroyAllWindows()
 
 
