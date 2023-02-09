@@ -36,7 +36,13 @@ def main():
     # camera calibration for all images
     ret1, mtx1, dist1, rvecs1, tvecs1 = Offline(images)
 
-    #TODO camera calibration for run 2 and 3
+    images = glob.glob('images2/chessImage?.jpg')
+    # camera calibration for run 2
+    ret2, mtx2, dist2, rvecs2, tvecs2 = Offline(images)
+
+    images = glob.glob('images3/chessImage?.jpg')
+    # camera calibration for run 3
+    ret3, mtx3, dist3, rvecs3, tvecs3 = Offline(images)
 
     #TODO online phase
 
