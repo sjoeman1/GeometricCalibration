@@ -33,16 +33,16 @@ def getChessboardCorners(img):
 
 
 def main():
-    # images = glob.glob('images/chessImage*.jpg')
-    # print(images)
-    # # camera calibration for all images
-    # calibration1 = Offline(images)
-
     images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
+    print(images)
+    # camera calibration for all images
+    calibration1 = Offline(images)
+
+    images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.png')
     # camera calibration for run 2
     calibration2 = Offline(images)
 
-    images = glob.glob('images3\\chessImage*.png')
+    images = glob.glob(f'{os.getcwd()}\\images3\\chessImage*.png')
     # camera calibration for run 3
     calibration3 = Offline(images)
 
@@ -135,6 +135,7 @@ def generateImage(img, calibration, corners = None):
 
         img = draw(img, corners, imgpts)
         cv.imshow('img', img)
+
 
 def Online(images, calibration):
     vid = cv.VideoCapture(0)
