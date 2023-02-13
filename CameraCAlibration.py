@@ -47,6 +47,8 @@ def main():
     calibration3 = Offline(images)
 
     #Online phase
+    image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage157True.jpg')
+    generateImage(image, calibration1)
     Online(images, calibration2)
 
 def Offline(images):
