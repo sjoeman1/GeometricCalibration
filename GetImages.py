@@ -9,12 +9,14 @@ board_shape = (columns, rows)
 
 def main():
     i = 0
+    trues = 0
+    false = 0
     print("get 25 images, 5 which do not automatically detect corners.")
     print("Take a final test image that has the chessboard tilted significantly close to the image border. Corners have to be found automatically")
     print("press space to take picture, esc to exit")
     while True :
-        ret, frame = vid.read()
-        if not ret:
+        ret_vid, frame = vid.read()
+        if not ret_vid:
             print("could not find video input, exiting...")
             break
         cv.imshow('img', frame)
@@ -26,7 +28,11 @@ def main():
             print(f"writing image {i}")
             gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
             ret, corners = cv.findChessboardCorners(gray, board_shape, None)
-            print(f"Able to find corners: {ret}")
+            if(ret):
+                trues +=1
+            else:
+                false +=1
+            print(f"Able to find corners: {ret}, trues: {trues}, false {false}")
             cv.imwrite(f"images\\chessImage{i}{ret}.jpg", frame)
             i += 1
 
