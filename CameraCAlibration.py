@@ -15,18 +15,21 @@ board_shape = (columns, rows)
 
 
 def click_event(event, x, y, flags, params):
+    corners, clicks = params
     if event == cv.EVENT_LBUTTONDOWN:
         print(x, ' ', y)
-        params.append([x, y])
-        if len(params) == 4:
+        corners[clicks] = (x, y)
+        clicks +=1
+        if len(clicks) == 4:
             cv.destroyWindow('img')
 
 
 def getChessboardCorners(img):
-    cv.imshow("img", img)
-    corners = []
-    cv.setMouseCallback('img', click_event, param= corners)
-    cv.waitKey(0)
+    cv.imshow('img Click corners', img)
+    clicks = 0
+    corners = np.zeros(4)
+    cv.setMouseCallback('img Click corners', click_event, param= (corners, clicks))
+    cv.waitKey(10000)
     print(corners)
     return True, corners
 
@@ -69,10 +72,8 @@ def Offline(images):
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # Find the chess board corners
         ret, corners = cv.findChessboardCorners(gray, board_shape, None)
-        automatic = ret
         if not ret:
             print(fname)
-            continue
             ret, corners = getChessboardCorners(gray)
             # TODO: linear interpolation of 4 corner points
         # If found, add object points, image points (after refining them)
@@ -116,15 +117,15 @@ def draw(img, corners, imgpts):
 
 def generateImage(img, calibration, corners = None):
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-    objp = np.zeros((6 * 7, 3), np.float32)
-    objp[:, :2] = np.mgrid[0:7, 0:6].T.reshape(-1, 2)
+    objp = np.zeros((columns * rows, 3), np.float32)
+    objp[:, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2)
     axis = np.float32([[3, 0, 0], [0, 3, 0], [0, 0, -3]]).reshape(-1, 3)
 
     ret, mtx, dist, rvecs, tvecs = calibration
 
     #find corners
     if corners is None:
-        ret, corners = cv.findChessboardCorners(img, (7, 6), None)
+        ret, corners = cv.findChessboardCorners(img, board_shape, None)
 
     if ret is not False:
         # find the rotation and translation vectors.
