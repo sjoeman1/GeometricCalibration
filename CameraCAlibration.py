@@ -64,14 +64,14 @@ def Offline(images):
 
 
     for fname in images:
-        print(fname)
         img = cv.imread(fname)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # Find the chess board corners
         ret, corners = cv.findChessboardCorners(gray, board_shape, None)
-        print(corners)
         automatic = ret
         if not ret:
+            print(fname)
+            continue
             ret, corners = getChessboardCorners(gray)
             # TODO: linear interpolation of 4 corner points
         # If found, add object points, image points (after refining them)
