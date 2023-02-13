@@ -36,7 +36,7 @@ def main():
     # images = glob.glob('images/chessImage*.jpg')
     # print(images)
     # # camera calibration for all images
-    # ret1, mtx1, dist1, rvecs1, tvecs1 = Offline(images)
+    # calibration1 = Offline(images)
 
     images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.jpg')
     # camera calibration for run 2
@@ -47,7 +47,7 @@ def main():
     calibration3 = Offline(images)
 
     #Online phase
-    Online(images, calibration1)
+    Online(images, calibration2)
 
 def Offline(images):
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
@@ -60,7 +60,6 @@ def Offline(images):
     print(images)
 
     img = cv.imread(images[0])
-    cv.imshow("img", img)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
 
@@ -70,6 +69,7 @@ def Offline(images):
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # Find the chess board corners
         ret, corners = cv.findChessboardCorners(gray, board_shape, None)
+        print(corners)
         automatic = ret
         if not ret:
             ret, corners = getChessboardCorners(gray)
