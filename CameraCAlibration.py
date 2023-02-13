@@ -50,6 +50,8 @@ def main():
     calibration3 = Offline(images)
 
     #Online phase
+    image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage157True.jpg')
+    generateImage(image, calibration1)
     Online(images, calibration2)
 
 def Offline(images):
@@ -89,6 +91,7 @@ def Offline(images):
 
 
 def undistort(image, calibration):
+    # undistort an image using a calibration
     ret, mtx, dist, rvecs, tvecs = calibration
     h, w = img.shape[:2]
     newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
@@ -101,6 +104,7 @@ def undistort(image, calibration):
     return dst
 
 def draw(img, corners, imgpts):
+    #draw a cube on the image given the corners and the projected points
     imgpts = np.int32(imgpts).reshape(-1, 2)
 
     # draw ground floor in green
@@ -116,6 +120,8 @@ def draw(img, corners, imgpts):
     return img
 
 def generateImage(img, calibration, corners = None):
+    #overlay a cube over an image
+
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
     objp = np.zeros((columns * rows, 3), np.float32)
     objp[:, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2)
@@ -139,6 +145,9 @@ def generateImage(img, calibration, corners = None):
 
 
 def Online(images, calibration):
+    #do the online part of the assignment
+    #draws a cube on each chessboard image and displays it
+
     vid = cv.VideoCapture(0)
     while True:
         ret_vid, frame = vid.read()
