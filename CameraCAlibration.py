@@ -38,7 +38,7 @@ def main():
     # # camera calibration for all images
     # calibration1 = Offline(images)
 
-    images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.jpg')
+    images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.jpg')
     # camera calibration for run 2
     calibration2 = Offline(images)
 
@@ -60,6 +60,7 @@ def Offline(images):
     print(images)
 
     img = cv.imread(images[0])
+    cv.imshow("img", img)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
 
