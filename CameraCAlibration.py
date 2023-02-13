@@ -16,18 +16,19 @@ board_shape = (columns, rows)
 
 def click_event(event, x, y, flags, params):
     corners, clicks = params
+    print(clicks)
     if event == cv.EVENT_LBUTTONDOWN:
         print(x, ' ', y)
-        corners[clicks] = (x, y)
-        clicks +=1
-        if len(clicks) == 4:
-            cv.destroyWindow('img')
+        corners[clicks] = [x, y]
+        clicks += 1
+        if clicks == 4:
+            cv.destroyWindow('img Click corners')
 
 
 def getChessboardCorners(img):
     cv.imshow('img Click corners', img)
     clicks = 0
-    corners = np.zeros(4)
+    corners = np.zeros((4, 2))
     cv.setMouseCallback('img Click corners', click_event, param= (corners, clicks))
     cv.waitKey(10000)
     print(corners)
