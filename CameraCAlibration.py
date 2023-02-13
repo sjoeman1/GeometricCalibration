@@ -38,11 +38,11 @@ def main():
     # # camera calibration for all images
     # calibration1 = Offline(images)
 
-    images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.jpg')
+    images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
     # camera calibration for run 2
     calibration2 = Offline(images)
 
-    images = glob.glob('images3\\chessImage*.jpg')
+    images = glob.glob('images3\\chessImage*.png')
     # camera calibration for run 3
     calibration3 = Offline(images)
 
