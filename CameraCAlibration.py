@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 import glob
+import os
 
 # termination criteria
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -32,15 +33,16 @@ def getChessboardCorners(img):
 
 
 def main():
-    images = glob.glob('images/chessImage?.jpg')
-    # camera calibration for all images
-    calibration1 = Offline(images)
+    # images = glob.glob('images/chessImage*.jpg')
+    # print(images)
+    # # camera calibration for all images
+    # ret1, mtx1, dist1, rvecs1, tvecs1 = Offline(images)
 
-    images = glob.glob('images2/chessImage?.jpg')
+    images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.jpg')
     # camera calibration for run 2
     calibration2 = Offline(images)
 
-    images = glob.glob('images3/chessImage?.jpg')
+    images = glob.glob('images3\\chessImage*.jpg')
     # camera calibration for run 3
     calibration3 = Offline(images)
 
@@ -55,6 +57,11 @@ def Offline(images):
     # Arrays to store object points and image points from all the images.
     objpoints = []  # 3d point in real world space
     imgpoints = []  # 2d points in image plane.
+    print(images)
+
+    img = cv.imread(images[0])
+    cv.imshow("img", img)
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
 
     for fname in images:
