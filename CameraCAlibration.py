@@ -129,12 +129,20 @@ def generateImage(img, calibration, corners = None):
         cv.imshow('img', img)
 
 def Online(images, calibration):
-    for fname in images:
-        print(fname)
-        img = cv.imread(fname)
-        gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        generateImage(gray, calibration)
-        cv.waitKey(500)
+    vid = cv.VideoCapture(0)
+    while True:
+        ret_vid, frame = vid.read()
+        if not ret_vid:
+            print("could not find video input, exiting...")
+            break
+        generateImage(frame, calibration)
+
+        key = cv.waitKey(1)
+        if key % 256 == 27:
+            print("aborting")
+            break
+
+    vid.release()
     cv.destroyAllWindows()
 
 if __name__ == "__main__":
