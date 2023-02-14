@@ -14,6 +14,102 @@ board_shape = (columns, rows)
 
 clicks = 0
 
+def undistort(img, calibration):
+    # undistort an image using a calibration
+    ret, mtx, dist, rvecs, tvecs = calibration
+    h, w = img.shape[:2]
+    newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+
+    # undistort
+    dst = cv.undistort(img, mtx, dist, None, newcameramtx)
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y + h, x:x + w]
+    return dst
+
+def draw(img, corners, imgpts):
+    # #draw a cube on the image given the corners and the projected points
+    imgpts = np.int32(imgpts).reshape(-1, 2)
+
+    # draw ground floor in green
+    img = cv.drawContours(img, [imgpts[:4]], -1, (0, 255, 0), -3)
+
+    # draw pillars in blue color
+    for i, j in zip(range(4), range(4, 8)):
+        img = cv.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255), 3)
+
+    # draw top layer in red color
+    img = cv.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
+    return img
+
+
+def generateImage(img, calibration, corners = None):
+    #overlay a cube over an image
+
+    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+    objp = np.zeros((columns * rows, 3), np.float32)
+    objp[:, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2)
+    axis = np.float32([[0, 0, 0], [0, 3, 0], [3, 3, 0], [3, 0, 0],
+                       [0, 0, -3], [0, 3, -3], [3, 3, -3], [3, 0, -3]])
+
+    ret, mtx, dist, rvecs, tvecs = calibration
+
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+    #find corners
+    if corners is None:
+        ret, corners = cv.findChessboardCorners(gray, board_shape, None)
+        img = cv.drawChessboardCorners(img, board_shape, corners, ret)
+
+    if ret is not False:
+        corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+
+        # find the rotation and translation vectors.
+        ret, rvecs, tvecs = cv.solvePnP(objp, corners, mtx, dist)
+
+        #project 3D points to image plane
+        imgpts, jac = cv.projectPoints(axis, rvecs, tvecs, mtx, dist)
+
+        img = draw(img, corners2, imgpts)
+
+    return img
+
+
+def Online(images, calibration):
+    #do the online part of the assignment
+    #draws a cube on each chessboard image and displays it
+
+    vid = cv.VideoCapture(0)
+    while True:
+        ret_vid, frame = vid.read()
+        if not ret_vid:
+            print("could not find video input, exiting...")
+            break
+        frame = generateImage(frame, calibration)
+        cv.imshow('vid', frame)
+        key = cv.waitKey(1)
+        if key % 256 == 27:
+            print("aborting")
+            break
+
+    vid.release()
+    cv.destroyAllWindows()
+
+def interpolateCorners(init_corners):
+    # use a projective matrix to calculate the missing corners
+    # calculate coordinates of grid between 0 and 1 with length of rows and columns
+    x = np.linspace(0, 1, columns)
+    y = np.linspace(0, 1, rows)
+    #combine x and y to get a grid of coordinates
+    grid = np.meshgrid(x, y)
+
+
+    projective_matrix = cv.getPerspectiveTransform(np.float32(init_corners), np.float32([[0, 0], [0, 1], [1, 1], [1, 0]]))
+    #use the matrix to transform the grid to coordinates on the image
+    corners = cv.perspectiveTransform(np.float32(grid).reshape(-1, 1, 2), projective_matrix)
+    print(corners)
+
+    return corners
 
 
 def click_event(event, x, y, flags, params):
@@ -38,29 +134,6 @@ def getChessboardCorners(img):
     cv.waitKey(0)
     print(corners)
     return True, corners
-
-
-
-def main():
-    # images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
-    # print(images)
-    # # camera calibration for all images
-    # calibration1 = Offline(images)
-
-    images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.png')
-    # camera calibration for run 2
-    calibration2 = Offline(images)
-
-    images = glob.glob(f'{os.getcwd()}\\images3\\chessImage*.png')
-    # camera calibration for run 3
-    calibration3 = Offline(images)
-
-    #Online phase
-    image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage157True.jpg')
-    image = generateImage(image, calibration2)
-    cv.imshow("img with cube calibration 2", image)
-    cv.waitkey(0)
-    Online(images, calibration2)
 
 def Offline(images):
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
@@ -98,97 +171,34 @@ def Offline(images):
         cv.drawChessboardCorners(img, board_shape, corners2, ret)
         cv.imshow('img', img)
         cv.waitKey(0)
-    cv.destroyAllWindows()
+    cv.destroyWindow('img')
     return cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+def main():
+    image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage157True.jpg')
 
+    # images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
+    # print(images)
+    # # camera calibration for all images
+    # calibration1 = Offline(images)
+    # img = generateImage(image, calibration1)
+    # cv.imshow("calibration 2", img)
 
-def undistort(img, calibration):
-    # undistort an image using a calibration
-    ret, mtx, dist, rvecs, tvecs = calibration
-    h, w = img.shape[:2]
-    newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+    images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.png')
+    # camera calibration for run 2
+    calibration2 = Offline(images)
+    img = generateImage(image, calibration2)
+    cv.imshow("calibration 2", img)
 
-    # undistort
-    dst = cv.undistort(img, mtx, dist, None, newcameramtx)
-    # crop the image
-    x, y, w, h = roi
-    dst = dst[y:y + h, x:x + w]
-    return dst
+    images = glob.glob(f'{os.getcwd()}\\images3\\chessImage*.png')
+    # camera calibration for run 3
+    calibration3 = Offline(images)
+    img = generateImage(image, calibration3)
+    cv.imshow("calibration 3", img)
 
-def draw(img, corners, imgpts):
-    #draw a cube on the image given the corners and the projected points
-    imgpts = np.int32(imgpts).reshape(-1, 2)
+    cv.waitKey(0)
 
-    # draw ground floor in green
-    img = cv.drawContours(img, [imgpts[:4]], -1, (0, 255, 0), -3)
-
- 
-
-    # draw top layer in red color
-    img = cv.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
-
-    return img
-
-def generateImage(img, calibration, corners = None):
-    #overlay a cube over an image
-
-    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-    objp = np.zeros((columns * rows, 3), np.float32)
-    objp[:, :2] = np.mgrid[0:columns, 0:rows].T.reshape(-1, 2)
-    axis = np.float32([[3, 0, 0], [0, 3, 0], [0, 0, -3]]).reshape(-1, 3)
-
-    ret, mtx, dist, rvecs, tvecs = calibration
-
-    #find corners
-    if corners is None:
-        ret, corners = cv.findChessboardCorners(img, board_shape, None)
-
-    if ret is not False:
-        # find the rotation and translation vectors.
-        ret, rvecs, tvecs = cv.solvePnP(objp, corners, mtx, dist)
-
-        #project 3D points to image plane
-        imgpts, jac = cv.projectPoints(axis, rvecs, tvecs, mtx, dist)
-
-        img = draw(img, axis, imgpts)
-        cv.imshow('img', img)
-
-
-def Online(images, calibration):
-    #do the online part of the assignment
-    #draws a cube on each chessboard image and displays it
-
-    vid = cv.VideoCapture(0)
-    while True:
-        ret_vid, frame = vid.read()
-        if not ret_vid:
-            print("could not find video input, exiting...")
-            break
-        generateImage(frame, calibration)
-
-        key = cv.waitKey(1)
-        if key % 256 == 27:
-            print("aborting")
-            break
-
-    vid.release()
-    cv.destroyAllWindows()
-
-def interpolateCorners(init_corners):
-    # use a projective matrix to calculate the missing corners
-    # calculate coordinates of grid between 0 and 1 with length of rows and columns
-    x = np.linspace(0, 1, columns)
-    y = np.linspace(0, 1, rows)
-    #combine x and y to get a grid of coordinates
-    grid = np.meshgrid(x, y)
-
-
-    projective_matrix = cv.getPerspectiveTransform(np.float32(init_corners), np.float32([[0, 0], [0, 1], [1, 1], [1, 0]]))
-    #use the matrix to transform the grid to coordinates on the image
-    corners = cv.perspectiveTransform(np.float32(grid).reshape(-1, 1, 2), projective_matrix)
-    print(corners)
-
-    return corners
+    #Online phase
+    Online(images, calibration2)
 
 if __name__ == "__main__":
     main()
