@@ -34,7 +34,7 @@ def click_event(event, x, y, flags, params):
 def getChessboardCorners(img):
     cv.imshow('img Click corners', img)
     corners = np.zeros((4, 2))
-    cv.setMouseCallback('img Click corners', click_event, param= corners)
+    cv.setMouseCallback('img Click corners', click_event, param= (corners, clicks))
     cv.waitKey(0)
     print(corners)
     return True, corners
@@ -42,10 +42,10 @@ def getChessboardCorners(img):
 
 
 def main():
-    images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
-    print(images)
-    # camera calibration for all images
-    calibration1 = Offline(images)
+    # images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
+    # print(images)
+    # # camera calibration for all images
+    # calibration1 = Offline(images)
 
     images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.png')
     # camera calibration for run 2
@@ -57,7 +57,9 @@ def main():
 
     #Online phase
     image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage157True.jpg')
-    generateImage(image, calibration1)
+    image = generateImage(image, calibration2)
+    cv.imshow("img with cube calibration 2", image)
+    cv.waitkey(0)
     Online(images, calibration2)
 
 def Offline(images):
@@ -95,12 +97,12 @@ def Offline(images):
         # Draw and display the corners
         cv.drawChessboardCorners(img, board_shape, corners2, ret)
         cv.imshow('img', img)
-        cv.waitKey(500)
+        cv.waitKey(0)
     cv.destroyAllWindows()
     return cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
 
-def undistort(image, calibration):
+def undistort(img, calibration):
     # undistort an image using a calibration
     ret, mtx, dist, rvecs, tvecs = calibration
     h, w = img.shape[:2]
@@ -120,9 +122,7 @@ def draw(img, corners, imgpts):
     # draw ground floor in green
     img = cv.drawContours(img, [imgpts[:4]], -1, (0, 255, 0), -3)
 
-    # draw pillars in blue color
-    for i, j in zip(range(4), range(4, 8)):
-        img = cv.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255), 3)
+ 
 
     # draw top layer in red color
     img = cv.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
@@ -150,7 +150,7 @@ def generateImage(img, calibration, corners = None):
         #project 3D points to image plane
         imgpts, jac = cv.projectPoints(axis, rvecs, tvecs, mtx, dist)
 
-        img = draw(img, corners, imgpts)
+        img = draw(img, axis, imgpts)
         cv.imshow('img', img)
 
 
