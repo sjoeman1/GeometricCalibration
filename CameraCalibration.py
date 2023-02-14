@@ -95,26 +95,38 @@ def Online(images, calibration):
     vid.release()
     cv.destroyAllWindows()
 
-def interpolateCorners(init_corners):
-    # use a projective matrix to calculate the missing corners
+def interpolateCorners(init_corners, image):
+    # use a projective matrix to calculate all the corners in a grid
+
+
+    #calculate the projective matrix
+    input_pts = np.float32(init_corners)
+    output_pts = np.float32([[0, 0], [500, 0], [500, 500], [0, 500]])
+    M = cv.getPerspectiveTransform(output_pts, input_pts)
+
     # calculate coordinates of grid between 0 and 1 with length of rows and columns
-    x = np.linspace(0, 1, columns)
-    y = np.linspace(0, 1, rows)
+    x = np.linspace(0, 500, columns)
+    y = np.linspace(0, 500, rows)
     #combine x and y to get a grid of coordinates
-    grid = np.meshgrid(x, y)
+    grid = np.array(np.meshgrid(x, y)).T.reshape(-1, 2)
 
-
-    projective_matrix = cv.getPerspectiveTransform(np.float32(init_corners), np.float32([[0, 0], [0, 1], [1, 1], [1, 0]]))
+    corners = []
     #use the matrix to transform the grid to coordinates on the image
-    corners = cv.perspectiveTransform(np.float32(grid).reshape(-1, 1, 2), projective_matrix)
-    print(corners)
+    for point in grid:
+        corner = cv.perspectiveTransform(np.array([[point]]), M)[0][0]
+        corners.append(corner)
 
+    #draw a circle for each corner
+    for corner in corners:
+       cv.circle(image, (int(corner[0]), int(corner[1])), 5, (0, 0, 255), -1)
+    cv.imshow('corners', image)
+    cv.waitKey(1)
     return corners
 
 
 def click_event(event, x, y, flags, params):
     global clicks
-    corners = params
+    corners = params[0]
     print(clicks)
     print(corners)
     if event == cv.EVENT_LBUTTONDOWN:
@@ -158,7 +170,8 @@ def Offline(images):
         if not ret:
             print(fname)
             ret, corners = getChessboardCorners(gray)
-            corners = interpolateCorners(corners)
+            corners = interpolateCorners(corners, img)
+            print("BEEP")
             cv.drawChessboardCorners(img, board_shape, corners, ret)
             cv.imshow("img manual corners", img)
             print(corners)
@@ -176,12 +189,12 @@ def Offline(images):
 def main():
     image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage157True.jpg')
 
-    # images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
+    images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
     # print(images)
     # # camera calibration for all images
-    # calibration1 = Offline(images)
-    # img = generateImage(image, calibration1)
-    # cv.imshow("calibration 2", img)
+    calibration1 = Offline(images)
+    img = generateImage(image, calibration1)
+    cv.imshow("calibration 2", img)
 
     images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.png')
     # camera calibration for run 2
