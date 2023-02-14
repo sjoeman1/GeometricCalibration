@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 import glob
+from scipy.interpolate import griddata
 import os
 
 # termination criteria
@@ -11,26 +12,30 @@ columns = 6
 rows = 7
 board_shape = (columns, rows)
 
+clicks = 0
 
 
 
 def click_event(event, x, y, flags, params):
-    corners, clicks = params
+    global clicks
+    corners = params
     print(clicks)
+    print(corners)
     if event == cv.EVENT_LBUTTONDOWN:
         print(x, ' ', y)
         corners[clicks] = [x, y]
+
         clicks += 1
         if clicks == 4:
+            clicks = 0
             cv.destroyWindow('img Click corners')
 
 
 def getChessboardCorners(img):
     cv.imshow('img Click corners', img)
-    clicks = 0
     corners = np.zeros((4, 2))
-    cv.setMouseCallback('img Click corners', click_event, param= (corners, clicks))
-    cv.waitKey(10000)
+    cv.setMouseCallback('img Click corners', click_event, param= corners)
+    cv.waitKey(0)
     print(corners)
     return True, corners
 
@@ -78,7 +83,11 @@ def Offline(images):
         if not ret:
             print(fname)
             ret, corners = getChessboardCorners(gray)
-            # TODO: linear interpolation of 4 corner points
+            corners = interpolateCorners(corners)
+            cv.drawChessboardCorners(img, board_shape, corners, ret)
+            cv.imshow("img manual corners", img)
+            print(corners)
+            cv.waitKey(0)
         # If found, add object points, image points (after refining them)
         objpoints.append(objp)
         corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
@@ -164,6 +173,22 @@ def Online(images, calibration):
 
     vid.release()
     cv.destroyAllWindows()
+
+def interpolateCorners(init_corners):
+    # use a projective matrix to calculate the missing corners
+    # calculate coordinates of grid between 0 and 1 with length of rows and columns
+    x = np.linspace(0, 1, columns)
+    y = np.linspace(0, 1, rows)
+    #combine x and y to get a grid of coordinates
+    grid = np.meshgrid(x, y)
+
+
+    projective_matrix = cv.getPerspectiveTransform(np.float32(init_corners), np.float32([[0, 0], [0, 1], [1, 1], [1, 0]]))
+    #use the matrix to transform the grid to coordinates on the image
+    corners = cv.perspectiveTransform(np.float32(grid).reshape(-1, 1, 2), projective_matrix)
+    print(corners)
+
+    return corners
 
 if __name__ == "__main__":
     main()
