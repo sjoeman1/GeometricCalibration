@@ -182,6 +182,7 @@ def Offline(images):
         # Find the chess board corners
         ret, corners = cv.findChessboardCorners(gray, board_shape, None)
         if not ret:
+            continue
             print(fname)
             ret, corners = getChessboardCorners(gray)
             corners = interpolateCorners(corners, img)
@@ -203,18 +204,21 @@ def main():
     calibration1 = Offline(images)
     img = generateImage(image, calibration1)
     cv.imshow("calibration 1", img)
+    cv.imwrite("cubeCalibration1.png", img)
 
     images = glob.glob(f'images2\\chessImage*.png')
     # camera calibration for run 2
     calibration2 = Offline(images)
     img = generateImage(image, calibration2)
     cv.imshow("calibration 2", img)
+    cv.imwrite("cubeCalibration2.png", img)
 
     images = glob.glob(f'images3\\chessImage*.png')
     # camera calibration for run 3
     calibration3 = Offline(images)
     img = generateImage(image, calibration3)
     cv.imshow("calibration 3", img)
+    cv.imwrite("cubeCalibration3.png", img)
 
     cv.waitKey(0)
 
