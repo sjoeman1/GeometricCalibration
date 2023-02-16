@@ -9,7 +9,7 @@ criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
 columns = 6
-rows = 7
+rows = 9
 board_shape = (columns, rows)
 
 clicks = 0
@@ -35,6 +35,9 @@ def draw_cube(img, imgpts, imgpts2d, corners):
 
     imgpts = np.int32(imgpts).reshape(-1, 2)
 
+    img = cv.line(img, tuple(imgpts[0]), tuple(imgpts[1]), (255,255,0), 10)
+    img = cv.line(img, tuple(imgpts[0]), tuple(imgpts[3]), (0,255,255), 10)
+
     # draw ground floor in green
     img = cv.drawContours(img, [imgpts[:4]], -1, (0, 255, 0), -3)
 
@@ -42,16 +45,12 @@ def draw_cube(img, imgpts, imgpts2d, corners):
     for i, j in zip(range(4), range(4, 8)):
         img = cv.line(img, tuple(imgpts[i]), tuple(imgpts[j]), (255,0,0), 6)
 
-
+    # draw the origin axis
+    img = cv.line(img, tuple(imgpts[0]), tuple(imgpts[4]), (255,0,255), 10)
 
     # draw top layer in red color
     img = cv.drawContours(img, [imgpts[4:]], -1, (0, 0, 255), 3)
 
-
-    # draw the origin axis
-    img = cv.line(img, tuple(imgpts[0]), tuple(imgpts[1]), (255,255,0), 10)
-    img = cv.line(img, tuple(imgpts[0]), tuple(imgpts[3]), (0,255,255), 10)
-    img = cv.line(img, tuple(imgpts[0]), tuple(imgpts[4]), (255,0,255), 10)
     return img
 
 
@@ -89,7 +88,7 @@ def generateImage(img, calibration, corners = None):
     return img
 
 
-def Online(images, calibration):
+def Online(images, calibration1, calibration2, calibration3):
     #do the online part of the assignment
     #draws a cube on each chessboard image and displays it
 
@@ -99,8 +98,12 @@ def Online(images, calibration):
         if not ret_vid:
             print("could not find video input, exiting...")
             break
-        frame = generateImage(frame, calibration)
-        cv.imshow('vid', frame)
+        frame = generateImage(frame, calibration1)
+        cv.imshow('vid calibration1', frame)
+        frame = generateImage(frame, calibration2)
+        cv.imshow('vid calibration2', frame)
+        frame = generateImage(frame, calibration3)
+        cv.imshow('vid calibration3', frame)
         key = cv.waitKey(1)
         if key % 256 == 27:
             print("aborting")
@@ -173,6 +176,7 @@ def Offline(images):
 
 
     for fname in images:
+        print(fname)
         img = cv.imread(fname)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # Find the chess board corners
@@ -192,22 +196,21 @@ def Offline(images):
     cv.destroyWindow('img')
     return cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 def main():
-    image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage157True.jpg')
+    image = cv.imread(f'{os.getcwd()}\\test_image\\chessImage22True.png')
 
-    images = glob.glob(f'{os.getcwd()}\\images\\chessImage*.png')
-    # print(images)
-    # # camera calibration for all images
-    #calibration1 = Offline(images)
-    #img = generateImage(image, calibration1)
-    #cv.imshow("calibration 2", img)
+    images = glob.glob(f'images\\chessImage*.png')
+    # camera calibration for all images
+    calibration1 = Offline(images)
+    img = generateImage(image, calibration1)
+    cv.imshow("calibration 1", img)
 
-    images = glob.glob(f'{os.getcwd()}\\images2\\chessImage*.png')
+    images = glob.glob(f'images2\\chessImage*.png')
     # camera calibration for run 2
     calibration2 = Offline(images)
     img = generateImage(image, calibration2)
     cv.imshow("calibration 2", img)
 
-    images = glob.glob(f'{os.getcwd()}\\images3\\chessImage*.png')
+    images = glob.glob(f'images3\\chessImage*.png')
     # camera calibration for run 3
     calibration3 = Offline(images)
     img = generateImage(image, calibration3)
@@ -216,7 +219,7 @@ def main():
     cv.waitKey(0)
 
     #Online phase
-    Online(images, calibration2)
+    Online(images, calibration1, calibration2, calibration3)
 
 if __name__ == "__main__":
     main()
