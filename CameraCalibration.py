@@ -117,10 +117,10 @@ def interpolateCorners(init_corners, image):
         corners.append(corner)
 
     #draw a circle for each corner
-    for corner in corners:
-       cv.circle(image, (int(corner[0]), int(corner[1])), 5, (0, 0, 255), -1)
-    cv.imshow('corners', image)
-    cv.waitKey(1)
+    #for corner in corners:
+    #   cv.circle(image, (int(corner[0]), int(corner[1])), 5, (0, 0, 255), -1)
+    #cv.imshow('corners', image)
+    #cv.waitKey(1)
     return corners
 
 
