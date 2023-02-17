@@ -40,7 +40,7 @@ def main():
             else:
                 false +=1
             print(f"Able to find corners: {ret}, trues: {trues}, false {false}")
-            cv.imwrite(f"images\\chessImage{5}{ret}.png", frame)
+            cv.imwrite(f"test_image\\testImage{ret}.png", frame)
             i += 1
 
     vid.release()
