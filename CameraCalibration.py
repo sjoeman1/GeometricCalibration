@@ -110,16 +110,16 @@ def realTimeOnline(calibration1, calibration2, calibration3):
     vid.release()
     cv.destroyAllWindows()
 
+# use a projective matrix to calculate all the corners in a grid
+# this way both the x and y coordinates are taken into account
 def interpolateCorners(init_corners, image):
-    # use a projective matrix to calculate all the corners in a grid
-
 
     #calculate the projective matrix
     input_pts = np.float32(init_corners)
     output_pts = np.float32([[500, 500], [500, 0], [0, 0], [0, 500]])
     M = cv.getPerspectiveTransform(output_pts, input_pts)
 
-    # calculate coordinates of grid between 0 and 1 with length of rows and columns
+    # calculate coordinates of grid between 0 and 500 with length of rows and columns, this number does not matter as it is only the size of the unit matrix
     x = np.linspace(0, 500, rows)
     y = np.linspace(0, 500, columns)
     #combine x and y to get a grid of coordinates
@@ -187,9 +187,14 @@ def Offline(images):
         # refine the corner positions
         corners = cv.cornerSubPix(gray, corners, (5, 5), (-1, -1), criteria)
 
+        #check quality of image
+
+        error = reprojectionError(objp, corners, gray)
+        print(error)
         # If found, add object points, image points (after refining them)
         objpoints.append(objp)
         imgpoints.append(corners)
+
 
         # Draw and display the corners
         cv.drawChessboardCorners(img, board_shape, corners, ret)
@@ -199,7 +204,26 @@ def Offline(images):
     cv.destroyWindow('img')
 
     #calibrate the camera using all the points found in all the images
-    return cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+    calibration = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+
+    return calibration
+
+# calculate the reprojection error by projecting the 3d points to 2d points and measuring the average distance
+
+def reprojectionError(objectpoints, corners, image):
+    mean_error = 0
+    objp = []
+    imgp = []
+    objp.append(objectpoints)
+    imgp.append(corners)
+    ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objp, imgp, image.shape[::-1], None, None)
+
+    for i in range(len(objp)):
+        imgpoints2, _ = cv.projectPoints(objp[i], rvecs[i], tvecs[i], mtx, dist)
+        error = cv.norm(imgp[i], imgpoints2, cv.NORM_L2) / len(imgpoints2)
+        mean_error += error
+
+    return mean_error/len(objp)
 
 # calibrate the camerea using 3 different runs of images
 # then display the test image with a cube
