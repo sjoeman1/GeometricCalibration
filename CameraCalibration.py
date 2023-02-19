@@ -148,14 +148,14 @@ def click_event(event, x, y, flags, params):
         clicks += 1
         if clicks == 4:
             clicks = 0
-            cv.destroyWindow('img Click corners')
+            cv.destroyWindow('Click corners (Clockwise from top-left)')
 
 
 # shows the image where corners need to be manually acquired
 def getChessboardCorners(img):
-    cv.imshow('img Click corners', img)
+    cv.imshow('Click corners (Clockwise from top-left)', img)
     corners = np.zeros((4, 2))
-    cv.setMouseCallback('img Click corners', click_event, param= (corners, clicks))
+    cv.setMouseCallback('Click corners (Clockwise from top-left)', click_event, param= (corners, clicks))
     cv.waitKey(0)
     return True, corners
 
