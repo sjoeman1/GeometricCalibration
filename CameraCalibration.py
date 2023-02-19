@@ -209,7 +209,6 @@ def Offline(images):
     return calibration
 
 # calculate the reprojection error by projecting the 3d points to 2d points and measuring the average distance
-
 def reprojectionError(objectpoints, corners, image):
     mean_error = 0
     objp = []
