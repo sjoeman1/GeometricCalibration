@@ -191,10 +191,10 @@ def Offline(images):
 
         error = reprojectionError(objp, corners, gray)
         print(error)
-        # If found, add object points, image points (after refining them)
-        objpoints.append(objp)
-        imgpoints.append(corners)
-
+        # If found to be within the error threshold, add object points, image points (after refining them)
+        if error < 0.02:
+            objpoints.append(objp)
+            imgpoints.append(corners)
 
         # Draw and display the corners
         cv.drawChessboardCorners(img, board_shape, corners, ret)
